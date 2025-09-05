@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Contatos</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .instructions {
+            background-color: #f0f9ff;
+            border: 1px solid #7dd3fc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .instructions h2 {
+            color: #0369a1;
+            margin-bottom: 15px;
+        }
+        
+        .instructions p {
+            margin-bottom: 10px;
+        }
+        
+        .instructions code {
+            background-color: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        .form-section {
+            background-color: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #4f46e5;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #475569;
+        }
+        
+        input[type="text"], input[type="tel"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input[type="text"]:focus, input[type="tel"]:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+        }
+        
+        button {
+            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background-color: #dcfce7;
+            color: #166534;
+            display: block;
+        }
+        
+        .error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            display: block;
+        }
+        
+        .contacts-section {
+            background-color: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .contact-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .contact-item {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .contact-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .contact-info {
+            flex-grow: 1;
+        }
+        
+        .contact-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #1e293b;
+        }
+        
+        .contact-details {
+            color: #64748b;
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .contact-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .delete-btn {
+            background: #ef4444;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+        
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+        
+        .loading {
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Gerenciador de Contatos</h1>
+            <p class="description">Conectado ao Supabase - Formulário de Cadastro</p>
+        </header>
+        
+        <div class="content">
+            <div class="instructions">
+                <h2>Instruções</h2>
+                <p>Este formulário está conectado ao Supabase usando as credenciais fornecidas.</p>
+                <p>Certifique-se de que a tabela "Contatos" existe no seu projeto Supabase com as colunas: <code>nome</code>, <code>telefone</code> e <code>cidade</code>.</p>
+            </div>
+            
+            <div class="form-section">
+                <h2 class="section-title">Adicionar Novo Contato</h2>
+                
+                <div id="status-message" class="status-message"></div>
+                
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="nome">Nome *</label>
+                        <input type="text" id="nome" required placeholder="Digite o nome completo">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telefone">Telefone</label>
+                        <input type="tel" id="telefone" placeholder="Digite o número de telefone">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cidade">Cidade</label>
+                        <input type="text" id="cidade" placeholder="Digite a cidade">
+                    </div>
+                    
+                    <button type="submit">Salvar Contato</button>
+                </form>
+            </div>
+            
+            <div class="contacts-section">
+                <h2 class="section-title">Lista de Contatos</h2>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Carregando...</p>
+                </div>
+                
+                <div class="contact-list" id="contact-list">
+                    <!-- Os contatos serão inseridos aqui via JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Conectado ao Supabase | Tabela: Contatos</p>
+        </footer>
+    </div>
+
+    <script>
+        // Inicialize o cliente Supabase com as credenciais fornecidas
+        const supabaseUrl = 'https://zxpbsyqrbidffplisxwc.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp4cGJzeXFyYmlkZmZwbGlzeHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxMDMwNzUsImV4cCI6MjA3MjY3OTA3NX0.PND2fTAQDe881D2IqfLLp4tmF_S56PwNihD3IO83jxQ';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        // Referências aos elementos do DOM
+        const contactForm = document.getElementById('contact-form');
+        const contactList = document.getElementById('contact-list');
+        const statusMessage = document.getElementById('status-message');
+        const loadingElement = document.getElementById('loading');
+        
+        // Função para mostrar mensagens de status
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + type;
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Função para carregar contatos do Supabase
+        async function loadContacts() {
+            loadingElement.style.display = 'block';
+            contactList.innerHTML = '';
+            
+            try {
+                const { data: contacts, error } = await supabase
+                    .from('Contatos')
+                    .select('*')
+                    .order('nome', { ascending: true });
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (contacts && contacts.length > 0) {
+                    contacts.forEach(contact => {
+                        const contactElement = document.createElement('div');
+                        contactElement.className = 'contact-item';
+                        contactElement.innerHTML = `
+                            <div class="contact-info">
+                                <div class="contact-name">${contact.nome}</div>
+                                <div class="contact-details">
+                                    ${contact.telefone ? `<span>📞 ${contact.telefone}</span>` : ''}
+                                    ${contact.cidade ? `<span>🏙️ ${contact.cidade}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="contact-actions">
+                                <button class="delete-btn" data-id="${contact.id}">Excluir</button>
+                            </div>
+                        `;
+                        contactList.appendChild(contactElement);
+                    });
+                    
+                    // Adicionar event listeners aos botões de excluir
+                    document.querySelectorAll('.delete-btn').forEach(button => {
+                        button.addEventListener('click', async (e) => {
+                            const contactId = e.target.getAttribute('data-id');
+                            await deleteContact(contactId);
+                        });
+                    });
+                } else {
+                    contactList.innerHTML = `
+                        <div class="empty-state">
+                            <div>📇</div>
+                            <p>Nenhum contato encontrado.</p>
+                            <p>Adicione seu primeiro contato usando o formulário acima.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar contatos:', error);
+                showStatus('Erro ao carregar contatos: ' + error.message, 'error');
+            } finally {
+                loadingElement.style.display = 'none';
+            }
+        }
+        
+        // Função para adicionar um novo contato
+        async function addContact(nome, telefone, cidade) {
+            try {
+                const { data, error } = await supabase
+                    .from('Contatos')
+                    .insert([
+                        { 
+                            nome: nome,
+                            telefone: telefone,
+                            cidade: cidade
+                        }
+                    ]);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                showStatus('Contato adicionado com sucesso!', 'success');
+                contactForm.reset();
+                loadContacts(); // Recarregar a lista de contatos
+            } catch (error) {
+                console.error('Erro ao adicionar contato:', error);
+                showStatus('Erro ao adicionar contato: ' + error.message, 'error');
+                
+                // Verifica se o erro é relacionado a políticas RLS
+                if (error.message.includes('row-level security') || error.message.includes('RLS')) {
+                    showStatus('ERRO: Política de segurança (RLS) está habilitada. Você precisa desativá-la nas configurações da tabela "Contatos" no Supabase.', 'error');
+                }
+            }
+        }
+        
+        // Função para excluir um contato
+        async function deleteContact(contactId) {
+            if (!confirm('Tem certeza que deseja excluir este contato?')) {
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('Contatos')
+                    .delete()
+                    .eq('id', contactId);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                showStatus('Contato excluído com sucesso!', 'success');
+                loadContacts(); // Recarregar a lista de contatos
+            } catch (error) {
+                console.error('Erro ao excluir contato:', error);
+                showStatus('Erro ao excluir contato: ' + error.message, 'error');
+            }
+        }
+        
+        // Event listener para o envio do formulário
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nome = document.getElementById('nome').value.trim();
+            const telefone = document.getElementById('telefone').value.trim();
+            const cidade = document.getElementById('cidade').value.trim();
+            
+            if (!nome) {
+                showStatus('Por favor, insira um nome para o contato.', 'error');
+                return;
+            }
+            
+            await addContact(nome, telefone, cidade);
+        });
+        
+        // Carregar contatos quando a página for carregada
+        document.addEventListener('DOMContentLoaded', loadContacts);
+    </script>
+</body>
+</html>
